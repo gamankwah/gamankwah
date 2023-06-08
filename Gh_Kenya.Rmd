@@ -1,0 +1,181 @@
+---
+title: "Working with WB Dataset"
+author: "Gideon AMANKWAH"
+date: "2023-05-11"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+# Data Analysis and Reporting with WDI Dataset in R
+
+# 1.0 importing libraries
+``` {r  Importing libraries}
+library(WDI)
+library(tidyverse)
+library(here)
+library(skimr)
+library(janitor)
+library(ggthemes)
+```
+
+# 1.1 Loading and Cleaning the WDI Data
+
+## Overview of the Data
+
+### Viewing the entire WDI dataset
+
+``` {r Viewing the WDI data }
+WDI() %>% as_tibble()
+```
+
+ 
+### Loading the relevant indicators and building a dataframe
+
+``` {r loading the dataset}
+gh_kenya<- WDI(country = c("GH", "BLZ"), indicator = c('NY.GDP.PCAP.KD', 
+                                                      "NY.GDP.MKTP.KD.ZG",
+                                                      "FP.CPI.TOTL.ZG",
+                                                      "BN.CAB.XOKA.GD.ZS"), 
+               start = 1990, end = 2021, cache = NULL, extra =  FALSE)
+head(gh_kenya)
+```
+
+Note: Download the WDI indicators for Ghana and Kenya
+
+### View the data downloaded
+```{r  getting overview of the data}
+skim_without_charts(gh_kenya)
+glimpse(gh_kenya)
+colnames(gh_kenya)
+```
+
+## cleaning the dataset
+
+``` {r rename the variables}
+gh_kenya<- gh_kenya %>%
+  rename(inflation = "FP.CPI.TOTL.ZG", current_balance = "BN.CAB.XOKA.GD.ZS", gdp_growth = "NY.GDP.MKTP.KD.ZG", gdp_per_capita ='NY.GDP.PCAP.KD' )
+```
+
+Note: It is important to clean the dataset to make it easier to use in the analysis. The following codes were run to ensure that there are consistencies in the naming of the variables.
+
+
+## 1.2 Organizing the data
+
+``` {r sorting the dataset}
+as_tibble(gh_kenya)%>%
+  arrange(-gdp_growth)
+```
+
+The data is sorted according countries with the highest GDP per capita/
+
+# 1.3 Analysis and Visualisation 
+
+## Summary of the indicators
+
+``` {r getting summary}
+gh_kenya %>%  
+  group_by(country)%>% 
+  summarise(ave_gdp = mean(gdp_growth), max_gdp = max(gdp_growth), 
+            ave_inflation = mean(inflation), max_inflation = max(inflation),
+            ave_gdp_capita = mean(gdp_per_capita), min_gdp_capita = min(gdp_per_capita))
+```
+
+The data was summarised and grouped according ot the individual countries
+
+## Getting more from visualization
+
+### GDP per capita
+
+``` {r Plot the dataset}
+ ggplot(gh_kenya, aes(year, gdp_per_capita, color=country)) + geom_line() + 
+    xlab('Year') + ylab('GDP per capita') + theme_tufte() + geom_rangeframe() +
+  
+  scale_y_continuous(labels = scales::number) +
+  labs(x = "", y = "Per capita income",
+       caption = "Source: By G.AMANKWAH, 2023 with WDI dataset",
+       title = "GDP per Capita income in Ghana and Kenya, 1990-2021")
+```
+
+
+Although per capita income in Ghana and Kenya have had an upward trajectory within the period under review, Kenya’s had a higher GDP per capita compared to Ghana on the average, i.e. **USD1337 and USD1305** (at 2015 constant prices) respectively. Recent data shows that Ghana has since 2008 enjoyed much higher standard of living than their Kenyan counterparts. In particular, the gap between the per capita income in Ghana and Kenya keeps widening despite a slump in both conuntries during COVID-19 era. During the period under review, a negative per capita growth rates were recorded in *2015* (domestic economic shock) and *2020* (during COVID) in Ghana. In the same vein, Kenya recorded more declines in per capita growth rates in the 1990s and early 2000s and 2020 during the COVID-19 pandemic. 
+
+### Inflation for Ghana
+
+``` {r adding labels and ploting inflation}
+gh_kenya %>%
+  filter(country == "Ghana") %>%
+  ggplot(.,aes(year, inflation)) + 
+  geom_line(stat="identity", alpha=.8, fill="#619cff", color="blue") +
+  scale_x_continuous(breaks = seq(1990, 2021, by = 2)) + theme_economist() + scale_color_economist() +
+
+  scale_y_continuous(labels = scales::number) +
+  labs(x = "", y = "Consumer Price Index (Annual %)",
+       caption = "Source: By G. AMANKWAH, 2023 with World Bank WDI dataset",
+       title = "The Consumer Price Index (Annual %) in Ghana, 1990-2021")
+```
+
+### Inflation rate
+
+``` {r adding labels and ploting GDP}
+gh_kenya %>%
+  mutate(cpiprop = inflation/100) %>%
+  ggplot(.,aes(year, cpiprop)) + 
+  geom_bar(stat="identity", alpha=.6, fill="green", color="black") +
+  scale_x_continuous(breaks = seq(1990, 2021, by = 5)) + facet_wrap(~country) + 
+  theme_hc() + scale_color_economist() +
+
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "", y = "inflation rate",
+       caption = "Source: By G. AMANKWAH, 2023 with WDI dataset",
+       title = "Inflation rates in Ghana and Kenya: 1990-2021",
+       subtitle = " A Comparism of inflationary figures in Ghana and Kenya")
+```
+
+
+Ghana recorded inflation rate of nearly **60% in 1995** being the highest ever recorded. At the same time, Kenya recorded its highest inflation rate of **46% in 1993** Inflation rate has averaged about almost 20% **(19.4%) in Ghana and 11.4% in Kenya**. This shows that there is much inflationary pressure in Ghana than in Kenya. Both countries have managed to keep their inflationary pressures on the low. However, inflation targeting has been much successful in Kenya than in Ghana.
+
+### GDP Growth rate 
+
+``` {r conditional formating}
+  # Add a column with your condition for the color
+  gh_kenya <- gh_kenya %>%
+    mutate(mycolor = ifelse (gdp_growth>0, 'green', 'red'))
+  
+  # plot
+ggplot(gh_kenya, aes(x=year ,y = gdp_growth)) +
+    geom_bar(stat = 'identity', alpha=.8, fill = gh_kenya$mycolor, color = 'black')  +
+    scale_x_continuous(breaks = seq(1990, 2021, by = 5)) + facet_wrap(~country) +
+  theme_bw() +
+    scale_y_continuous(labels = scales::number) +
+  labs(x = "", y = "GDP growth rate (Annual %)",
+       caption = "Source: By G. AMANKWAH, 2023 with WDI dataset",
+       title = "Comparism of GDP growth (Annual %) between Ghana and Kenya, 1990-2021",
+       subtitle = "COVID-19 may account for the slump in GDP growth")
+```
+
+GDP growth rate averaged about **5.31%** in Ghana and **3.62%** in Kenya between 1990 and 2021. Ghana recorded the highest GDP of **14%** in *2011* while **8.06%** annualized GDP growth was recorded in Kenya in *2010* and a near *7.5%* remarkable post COVID-19 pandemic recovery growth rate in 2021 after a slump in 2020. Nonetheless, the Kenya’s economy has experienced more stagnant growth and is much susceptible to shocks than Ghana.  
+
+## Fiscal stability
+``` {r fiscal space}
+gh_kenya <- gh_kenya %>%
+    mutate(fiscalspace = ifelse (current_balance> 0, 'green', 'red'))
+  
+  # plot
+ggplot(gh_kenya, aes(x=year ,y = current_balance)) +
+    geom_bar(stat = 'identity', alpha=.8, fill = gh_kenya$fiscalspace, color = 'black')  +
+    scale_x_continuous(breaks = seq(1990, 2021, by = 5)) + facet_wrap(~country) + theme_classic(base_size = 10) +
+    scale_y_continuous(labels = scales::number) +
+  labs(x = "", y = "Fiscal Balance",
+       caption = "Source: By G. AMANKWAH, 2023 with WDI dataset",
+       title = "Fiscal stability between Ghana and Kenya, 1990-2021")
+```
+
+While revenue mobilization efforts has been on the agenda of many African countries, these have not led to the much needed financial resources to match much to increasing government expenditures. In turn, most governments experience negative primary balance and widened debt levels due to the need to over reliance on the external sector **(through limited inflows)** and finance the fiscal gap through borrowing (*domestic and external*). In particular, both Ghana Kenya only recorded positive current account balance in 2004. 
+
+# 1.4 Conclusion
+
+This is a summary report of three economic indicators (**inflation rate, gdp growth rates and per capita**) in Ghana and Kenya between *1990 and 2021*. Overall, inflation rates have been low in both countries but much lower in Kenya. Similarly, while GDP per capita is higher in Ghana it has been on the ascendancy in the two countries. GDP per capita were higher in Kenya than Ghana until 2008. Since then, Ghanaians enjoy higher standard of living than Kenyan Overall, GDP growth is relatively higher in Ghana than in Kenya, although the post COVID-19 pandemic recovery has been robust in Kenya than in Ghana. To make a fair analysis, one needs to introduce more variables such debt to gdp ratio and revenue mobilization efforts in both countries to holistically assess the health and strength of the two countries.
+
+
+
