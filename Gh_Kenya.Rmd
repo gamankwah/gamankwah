@@ -175,7 +175,7 @@ While revenue mobilization efforts has been on the agenda of many African countr
 
 # 1.4 Conclusion
 
-This is a summary report of three economic indicators (**inflation rate, gdp growth rates and per capita**) in Ghana and Kenya between *1990 and 2021*. Overall, inflation rates have been low in both countries but much lower in Kenya. Similarly, while GDP per capita is higher in Ghana it has been on the ascendancy in the two countries. GDP per capita were higher in Kenya than Ghana until 2008. Since then, Ghanaians enjoy higher standard of living than Kenyan Overall, GDP growth is relatively higher in Ghana than in Kenya, although the post COVID-19 pandemic recovery has been robust in Kenya than in Ghana. To make a fair analysis, one needs to introduce more variables such debt to gdp ratio and revenue mobilization efforts in both countries to holistically assess the health and strength of the two countries.
+This is a summary report of three economic indicators (**inflation rate, gdp growth rates and per capita**) in Ghana and Kenya between *1990 and 2021*. Overall, inflation rates have been low in both countries but much lower in Kenya. Similarly, while GDP per capita is higher in Ghana it has been on the ascendancy in the two countries. GDP per capita were higher in Kenya than Ghana until 2008. Since then, Ghanaians enjoy higher standard of living than Kenyan Overall, GDP growth is relatively higher in Ghana than in Kenya, although the post COVID-19 pandemic recovery has been robust in Kenya than in Ghana. To make a fair analysis, one needs to introduce more variables such debt to gdp ratio and revenue mobilization efforts to holistically assess the health and strength of the two countries.
 
 
 
