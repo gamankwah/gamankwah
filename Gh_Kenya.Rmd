@@ -33,7 +33,7 @@ WDI() %>% as_tibble()
 ### Loading the relevant indicators and building a dataframe
 
 ``` {r loading the dataset}
-gh_kenya<- WDI(country = c("GH", "BLZ"), indicator = c('NY.GDP.PCAP.KD', 
+gh_kenya<- WDI(country = c("GH", "KEN"), indicator = c('NY.GDP.PCAP.KD', 
                                                       "NY.GDP.MKTP.KD.ZG",
                                                       "FP.CPI.TOTL.ZG",
                                                       "BN.CAB.XOKA.GD.ZS"), 
