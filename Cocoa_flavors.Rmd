@@ -1,0 +1,212 @@
+---
+title: "Cocoa Flavors"
+author: "G. AMANKWAH"
+date: "2024-05-17"
+output: html_document
+---
+
+
+
+# 1. Introduction
+This portfolio investigate the analysis of the "Flavors of Cacao" dataset. The dataset contains information about various chocolate bars, including their ratings, cocoa percentages, origins, and company locations. We'll begin by loading and cleaning the data, then proceed to perform analysis and visualization to gain insights.
+
+# 2. Data Structure Overview:
+
+This section provides a glimpse into the structure of the dataset, showing the column names and their respective data types.
+
+## Data Loading and Cleaning
+We start by loading the dataset and cleaning the column names for ease of use and understanding.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(tidyverse)
+
+```
+
+
+```{r loading of the dataset }
+flavors_of_cacao <- read_csv("~/Downloads/Data Analysis with R programming/flavors_of_cacao.csv")
+
+# Display the structure of the dataframe
+glimpse(flavors_of_cacao)
+
+```
+
+## Clean the data
+
+Next, we clean the data by renaming columns and selecting relevant columns of interest.
+
+```{r clean column names}
+colnames(flavors_of_cacao) <- c(
+  "Company",
+  "Specific_Bean_Origin_or_Bar_Name",
+  "REF",
+  "Review_Date",
+  "Cocoa_Percent",
+  "Company_Location",
+  "Rating",
+  "Bean_Type",
+  "Broad_Bean_Origin"
+)
+
+### Check the cleaned column names
+colnames(flavors_of_cacao)
+
+
+
+```
+
+Next, we can rename some of the columns and select the ones of interest to us.
+```{r Renaming of columns}
+flavors_of_cacao <- flavors_of_cacao %>%
+  rename(
+    Company = `Company`,
+    com_location = `Company_Location`,
+    Concentration = `Cocoa_Percent`,
+    origin = `Broad_Bean_Origin`
+  )
+
+### Select relevant columns
+trimmed_flavors <- flavors_of_cacao %>%
+  select(Rating, com_location, Concentration, Company, origin)
+
+
+
+```
+
+Convert 'Concentration' from a percentage string to a numeric value
+```{r conversion of sring to numeric}
+trimmed_flavors_df <- trimmed_flavors %>%
+  group_by(Company, com_location) %>%
+  filter(n() >= 20)
+
+### Calculate the average concentration and summarize by rating and company
+trimmed_flavors_df %>%
+  group_by(Rating, Company) %>%
+  summarise(
+    origin_count = n(),
+    average_Con = mean(Concentration, na.rm = TRUE)
+  ) %>%
+  arrange(Rating, Company) %>%
+  ggplot(aes(x = Company, y = Rating, fill = average_Con)) +
+  geom_col(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+## Summary of the data
+
+This table summarizes key statistics of the dataset, including the mean ratings, mean concentration, and minimum concentration.
+
+
+Calculate the mean rating and concentration and fine the minimum concentration
+
+```{r Data summary}
+summary_data <- trimmed_flavors %>%
+  summarise(
+    mean_ratings = mean(Rating, na.rm = TRUE),
+    mean_Con = mean(Concentration, na.rm = TRUE),
+    min_con = min(Concentration, na.rm = TRUE)
+  )
+
+print(summary_data)
+```
+
+## 3 Analysis and Visualization
+Count the number of observations per company location
+
+```{r Count of variables}
+location_count <- trimmed_flavors %>%
+  count(com_location, sort = TRUE)
+
+print(location_count)
+```
+This table shows the count of observations grouped by company location, providing insights into the distribution of data across different locations.
+
+
+Filter for companies with at least 20 reviews and plot the average concentration by company rating
+
+```{r Calculations and ploting of key variables}
+trimmed_flavors_df <- trimmed_flavors %>%
+  group_by(Company, com_location) %>%
+  filter(n() >= 20)
+
+### Calculate the average concentration and summarize by rating and company
+trimmed_flavors_df %>%
+  group_by(Rating, Company) %>%
+  summarise(
+    origin_count = n(),
+    average_Con = mean(Concentration, na.rm = TRUE)
+  ) %>%
+  arrange(Rating, Company) %>%
+  ggplot(aes(x = Company, y = Rating, fill = average_Con)) +
+  geom_col(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+This bar plot visualizes the average concentration of cocoa across different chocolate companies, grouped by their ratings. It helps identify whether higher-rated companies tend to use higher or lower cocoa concentrations in their products
+
+
+Filter for the best flavors based on specific criteria and create visualization
+
+```{r}
+### Check the unique values in the 'Concentration' column before filtering
+best_trimmed_flavors_df <- trimmed_flavors %>%
+  filter(!is.na(Rating), !is.na(Concentration)) %>%
+  filter(Rating >= 3.5, as.numeric(str_replace(Concentration, "%", "")) >= 75, origin != "")
+
+
+
+### Ensure 'Concentration' is treated as a factor with correct levels
+trimmed_flavors$Concentration <- factor(trimmed_flavors$Concentration, 
+                                        levels = sort(unique(trimmed_flavors$Concentration)))
+
+### View the filtered data
+as_tibble(best_trimmed_flavors_df)
+
+```
+Visualize the distribution of the best flavors
+
+```{r Visualization the best flavors}
+### Bar plot by company location
+ggplot(data = best_trimmed_flavors_df) + 
+  geom_bar(mapping = aes(x = fct_infreq(com_location)), fill = "red", color = "black") + 
+  labs(title = "Distribution by Company Location") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+  xlab("Company Location") + 
+  ylab("Count")
+
+```
+
+This bar plot illustrates the distribution of chocolate bars' company locations, showcasing which locations have the highest counts of chocolate bars in the dataset
+
+```{r Distribution by orin and concentration}
+### Bar plot by origin with faceting by concentration
+ggplot(data = trimmed_flavors) + 
+  geom_point(mapping = aes(x = origin, y = Rating, color = Concentration), position = "jitter") + 
+  facet_wrap(~ Concentration) + 
+  labs(title = "Distribution by Origin and Concentration", x = "Origin", y = "Rating") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+```
+
+This scatter plot with facets by concentration shows the distribution of chocolate bar origins based on their ratings. It allows for visualizing how origins are distributed across different concentration levels of cocoa.
+
+```{r rating vs concentration}
+
+### Jitter and boxplot of rating vs concentration
+ggplot(data = trimmed_flavors, mapping = aes(x = Concentration, y = Rating)) + 
+  geom_jitter(aes(color = 'blue'), alpha = 0.2) + 
+  geom_boxplot(fill = 'bisque', color = 'black', alpha = 0.3) + 
+  labs(title = "Recommended Bars") + 
+  guides(color = 'none') + 
+  theme_minimal()
+
+```
+
+This plot displays a jitter plot and boxplot of chocolate bar ratings against their cocoa concentrations. It helps in understanding the relationship between these two variables and identifying any trends or patterns.
+
+
+
